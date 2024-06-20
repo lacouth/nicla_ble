@@ -27,6 +27,8 @@
     let receberDados
     const TAMANHO = 160 * 120
     let imageArray = []
+    let dispositivo
+    
 
     
     btnConectar.addEventListener('click',() => {
@@ -36,10 +38,11 @@
         })
         .then(device => {
             
-            lblStatus.innerHTML = 'Status: Conectado ' + device.name
+            // dispositivo = device
             return device.gatt.connect()
         })
         .then(server => {
+            lblStatus.innerHTML = 'Status: Conectado '
             return server.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1213')
         })
         .then(service => {
@@ -55,7 +58,7 @@
             receberDados.addEventListener('characteristicvaluechanged', valorAlterado)
             receberDados.startNotifications()
 
-            return 
+            // return enviarDados.writeValue(0)
         })
 
     })
@@ -76,32 +79,21 @@
             dataArray[i] = value.getUint8(i)
         }
         imageArray = imageArray.concat(Array.from(dataArray))
-        
         if(imageArray.length >= TAMANHO){
-            // const newImg = [];
-            // while(imagem.length) newImg.push(imagem.splice(0,120));
-
-            // const blob = new Blob([new Uint8Array(newImg)], { type: 'image/jpeg' })
-            // const url = URL.createObjectURL(blob)
-            // tagImg.src = url
-
-            // tagImg.src = "data:image/png;base64," + newImg
-
-            // tagImg.src = "data:image/png;base64," + btoa(String.fromCharCode.apply(null, new Uint8Array(newImg)))
-            // console.log(newImg)
-
+            console.log(imageArray.length);
             const canvas = document.getElementById('imageCanvas');
             const ctx = canvas.getContext('2d');
-            const imageData = ctx.createImageData(160,120);
+            let imageData = ctx.createImageData(160,120);
+            
 
-            for (let i = 0; i < imageArray.length; i++) {
-                imageData.data[i] = imageArray[i];
+            for (let i = 0, j = 0; i < imageArray.length; i++, j += 4) {
+                imageData.data[j] = imageArray[i]
+                imageData.data[j + 1] = imageArray[i];
+                imageData.data[j + 2] = imageArray[i];
+                imageData.data[j + 3] = 255;
             }
 
-            ctx.putImageData(imageData, 0, 0);
-            console.log('Image displayed successfully');
-            
-            
+            ctx.putImageData(imageData, 0, 0); 
             imageArray = []
         }
     }
