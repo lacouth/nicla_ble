@@ -7,12 +7,11 @@
 
 GC2145 galaxyCore;
 Camera cam(galaxyCore);
-FrameBuffer fb;
-String imagem = "";
+
 
 BLEService niclaService("19B10000-E8F2-537E-4F6C-D104768A1213");
 
-const int chunk = 20;
+const int chunk = 100;
 
 BLECharacteristic enviarImagem("19B10000-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify, chunk);
 BLEUnsignedIntCharacteristic receberInt("19B10000-E8F2-537E-4F6C-D104768A1215", BLERead | BLEWrite);
@@ -83,21 +82,18 @@ void dataWritten(BLEDevice central, BLECharacteristic characteristic) {
   Serial.print("Valor Recebido: ");
   Serial.println(receberInt.value());
   if(receberInt.value() == 1 ){
-    if (cam.grabFrame(fb, 3000) == 0) {
+    FrameBuffer fb;
+    if (cam.grabFrame(fb, 1000) == 0) {
       int imageOffset = 0;
       uint8_t *img = fb.getBuffer();
       while(imageOffset < cam.frameSize()){
         int restante = cam.frameSize() - imageOffset;
-        int bytesToSend = restante < chunk ? restante : chunk;
-        enviarImagem.writeValue(&img[imageOffset],bytesToSend);
-        imageOffset += bytesToSend;
-        // Serial.print("Parte da imagem enviada: ");
-        // Serial.print(imageOffset);
-        // Serial.print(" de ");
-        // Serial.println(cam.frameSize());
-
+        // int bytesToSend = restante < chunk ? restante : chunk;
+        enviarImagem.writeValue(&img[imageOffset],chunk);
+        imageOffset += chunk;
       }
-      Serial.println("Imagem enviada com suscesso!");
+      Serial.print("Imagem enviada com suscesso! - ");
+      Serial.println(imageOffset);
     } else {
       Serial.println("falha ao obter imagem!");
     }
